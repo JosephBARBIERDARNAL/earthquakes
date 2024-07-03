@@ -3,15 +3,11 @@ import pandas as pd
 import geopandas as gpd
 from folium import plugins
 
-# Data URLs
-geojson_url = "https://raw.githubusercontent.com/holtzy/The-Python-Graph-Gallery/master/static/data/all_world.geojson"
-csv_url = "../The-Python-Graph-Gallery/static/data/earthquakes.csv"
-
 # Load data
+geojson_url = "https://raw.githubusercontent.com/holtzy/The-Python-Graph-Gallery/master/static/data/all_world.geojson"
 world = gpd.read_file(geojson_url)
-world = world[~world['name'].isin(["Antarctica", "Greenland"])]
 
-df = pd.read_csv(csv_url)
+df = pd.read_csv("../The-Python-Graph-Gallery/static/data/earthquakes.csv")
 df = df[df['Depth (km)'] >= 0.01]  # depth of at least 10 meters
 df.sort_values(by='Depth (km)', ascending=False, inplace=True)
 
