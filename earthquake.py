@@ -1,40 +1,50 @@
 import folium
 import pandas as pd
-import geopandas as gpd
 from folium import plugins
+import os
 
-# Load data
-geojson_url = "https://raw.githubusercontent.com/holtzy/The-Python-Graph-Gallery/master/static/data/all_world.geojson"
-world = gpd.read_file(geojson_url)
-
+# Load dataset
 df = pd.read_csv("../The-Python-Graph-Gallery/static/data/earthquakes.csv")
 df = df[df['Depth (km)'] >= 0.01]  # depth of at least 10 meters
 df.sort_values(by='Depth (km)', ascending=False, inplace=True)
 
 # Initialize map
-m = folium.Map(location=[0, 0], zoom_start=2, tiles='cartodb positron')
+m = folium.Map(
+    location=[0, 0],
+    zoom_start=2,
+    tiles='cartodb positron'
+)
 
-# Add world boundaries
-folium.GeoJson(world, style_function=lambda x: {'fillColor': '#E9C46A', 'color': '#E9C46A', 'weight': 0.1, 'fillOpacity': 0.2}).add_to(m)
+# Add earthquake data with clustering
+marker_cluster = plugins.MarkerCluster().add_to(m)
 
-# Add earthquake data with tooltips
+# Add all the individual earthquakes to the map
 for idx, row in df.iterrows():
     tooltip_text = f"""
-    <b>Location:</b> {row['Region']}<br>
-    <b>Magnitude:</b> {row['Magnitude']}<br>
-    <b>Depth:</b> {row['Depth (km)']} km<br>
-    <b>Date:</b> {row['Date']}
+    <h3><b>Location:</b> {row['Region']}</h3>
+    <h3><b>Magnitude:</b> {row['Magnitude']}</h3>
+    <h3><b>Depth:</b> {row['Depth (km)']} km</h3>
+    <h3><b>Date:</b> {row['Date']}</h3>
     """
+    color = '#0a9396' if row['Magnitude'] < 5 else '#ee9b00' if row['Magnitude'] < 7 else '#ae2012'
     folium.CircleMarker(
         location=[row['Latitude'], row['Longitude']],
         radius=row['Depth (km)'] * 0.05,
-        color='#B95F4C',
+        color=color,
         fill=True,
-        fill_color='#FEA996',
-        fill_opacity=0.6,
+        fill_color=color,
+        fill_opacity=0.7,
         weight=0.4,
         tooltip=folium.Tooltip(tooltip_text, sticky=True)
-    ).add_to(m)
+    ).add_to(marker_cluster)
 
-# Save and display the map
-m.save('index.html')
+heat_data = [[row['Latitude'], row['Longitude'], row['Magnitude']] for idx, row in df.iterrows()]
+plugins.HeatMap(heat_data).add_to(m)
+
+# Add layer control
+folium.LayerControl().add_to(m)
+
+# Save the map
+path = 'index.html'
+m.save(path)
+os.system(f"open {path}")
