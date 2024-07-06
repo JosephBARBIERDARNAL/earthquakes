@@ -15,9 +15,6 @@ m = folium.Map(
     tiles='cartodb positron'
 )
 
-# Add earthquake data with clustering
-marker_cluster = plugins.MarkerCluster().add_to(m)
-
 # Add all the individual earthquakes to the map
 for idx, row in df.iterrows():
     tooltip_text = f"""
@@ -36,13 +33,7 @@ for idx, row in df.iterrows():
         fill_opacity=0.7,
         weight=0.4,
         tooltip=folium.Tooltip(tooltip_text, sticky=True)
-    ).add_to(marker_cluster)
-
-heat_data = [[row['Latitude'], row['Longitude'], row['Magnitude']] for idx, row in df.iterrows()]
-plugins.HeatMap(heat_data).add_to(m)
-
-# Add layer control
-folium.LayerControl().add_to(m)
+    ).add_to(m)
 
 # Save the map
 path = 'index.html'
